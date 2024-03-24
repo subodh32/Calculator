@@ -6,7 +6,12 @@
 #define MAX_FUNCTIONS 100
 #define MAX_INPUT 1000
 
-double mode_claculator(char input[MAX_INPUT]);
+struct input{
+    char unfiltered[MAX_INPUT];
+    char filtered[MAX_FUNCTIONS][MAX_FUNCTION_NAME];
+};
+
+double mode_claculator(struct input *inputs);
 void mode_help();
 
 int is_number(char a);
@@ -16,88 +21,87 @@ int is_operation(char a);
 double calc(char inputs[MAX_FUNCTIONS][MAX_FUNCTION_NAME], int *start);
 double process_function(char function[MAX_FUNCTION_NAME], double num);
 
+void filter_inputs(struct input *inputs);
 
 int main()
 {
-    char input[MAX_INPUT];
+    struct input inputs;
 
-    while(strcmp(input,"exit\n") != 0) //while input != "exit"
+    while(strcmp(inputs.unfiltered,"exit\n") != 0) //while input != "exit"
     {
-        fgets(input, 1000, stdin);
+        fgets(inputs.unfiltered, 1000, stdin);
 
-        if(strcmp(input,"mode\n") == 0)
+        if(strcmp(inputs.unfiltered,"mode\n") == 0)
         {
             printf("mode\n");
         }
-        else if(strcmp(input,"help\n") == 0)
+        else if(strcmp(inputs.unfiltered,"help\n") == 0)
         {
             mode_help();
         }
-        else if(strcmp(input,"exit\n") != 0)
+        else if(strcmp(inputs.unfiltered,"exit\n") != 0)
         {
-            printf("ans: %lf\n", mode_claculator(input) );
+            printf("ans: %lf\n", mode_claculator(&inputs) );
         }
     }
 
     return 0;
 }
 
-double mode_claculator(char input[MAX_INPUT])
+void filter_inputs(struct input *inputs)
 {
-    char filtered[MAX_FUNCTIONS][MAX_FUNCTION_NAME];
-
     int i = 0, j = 0, index = 0;
     char temp[100];
-    while (input[i] != '\0')
+    while (inputs->unfiltered[i] != '\0')
     {
-        switch (input[i])
+        switch (inputs->unfiltered[i])
         {
         case '+':
-            strcpy(filtered[index++], "+");
+            strcpy(inputs->filtered[index++], "+");
             break;
         case '-':
-            strcpy(filtered[index++], "-");
+            strcpy(inputs->filtered[index++], "-");
             break;
         case '*':
-            strcpy(filtered[index++], "*");
+            strcpy(inputs->filtered[index++], "*");
             break;
         case '/':
-            strcpy(filtered[index++], "/");
+            strcpy(inputs->filtered[index++], "/");
             break;
         case '(':
-            strcpy(filtered[index++], "(");
+            strcpy(inputs->filtered[index++], "(");
             break;
         case ')':
-            strcpy(filtered[index++], ")");
+            strcpy(inputs->filtered[index++], ")");
             break;
         default:
-            if (is_number(input[i]))
+            if (is_number(inputs->unfiltered[i]))
             {
                 j = 0;
-                while (is_number(input[i]))
+                while (is_number(inputs->unfiltered[i]))
                 {
-                    temp[j] = input[i];
+                    temp[j] = inputs->unfiltered[i];
                     j++;
                     i++;
                 }
                 i--;
                 temp[j] = '\0';
-                strcpy(filtered[index], temp);
+                strcpy(inputs->filtered[index], temp);
                 index++;
             }
 
-            else if (is_function(input[i]))
+            else if (is_function(inputs->unfiltered[i]))
             {
                 j = 0;
-                while (is_function(input[i]))
+                while (is_function(inputs->unfiltered[i]))
                 {
-                    temp[j] = input[i];
+                    temp[j] = inputs->unfiltered[i];
                     j++;
                     i++;
                 }
                 i--;
                 temp[j] = '\0';
-                strcpy(filtered[index], temp);
+                strcpy(inputs->filtered[index], temp);
                 index++;
             }
 
@@ -107,7 +111,7 @@ double mode_claculator(char input[MAX_INPUT])
         i++;
     }
 
-    filtered[index][0] = '\0';
+    inputs->filtered[index][0] = '\0';
 
     /*
         The above code filters the output so that every individual number,operation and
@@ -117,17 +121,14 @@ double mode_claculator(char input[MAX_INPUT])
         will be stored as:
         {1,+,2,sin,(,1,),*,4}
     */
+}
 
-    index = 0;
-    // while(filtered[index][0] != '\0')
-    // {
-    //     printf("%s\n",filtered[index]);
-    //     index++;
-    // }
-    //TODO: remove this comment after debugging is complete
-
+double mode_claculator(struct input *inputs)
+{
+    filter_inputs(inputs);
     int start = 0;
-    double ans = calc(filtered, &start);
+
+    double ans = calc(inputs->filtered, &start);
 
     //printf("ans: %lf", ans);
     return ans;
@@ -152,7 +153,7 @@ int is_operation(char a)
 
 int is_function(char a)
 {
-    if ((a >= 'a' && a <= 'z'))
+    if ((a >= 'A' && a <= 'z'))
     {
         return 1;
     }
@@ -247,13 +248,19 @@ double process_function(char function[MAX_FUNCTION_NAME], double num)
 {
     if (strcmp(function, "fact") == 0)
     {
-        int fact = 1;
+        double fact = 1;
         for(int i = 1; i <= num; i++)
         {
             fact = fact * i;
         }
         return fact;
     }
+
+    if (strcmp(function, "PI") == 0)
+    {
+        return 3.14;
+    }
+
     return 0;
 }
 
