@@ -1,17 +1,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define MAX_FUNCTION_NAME 100
 #define MAX_FUNCTIONS 100
 #define MAX_INPUT 1000
 
-struct input{
+#define PRECISION 0.0001
+#define PI 3.14159265359
+
+struct input
+{
     char unfiltered[MAX_INPUT];
     char filtered[MAX_FUNCTIONS][MAX_FUNCTION_NAME];
 };
 
 double mode_claculator(struct input *inputs);
+double mode_integration(struct input *inputs);
 void mode_help();
 
 int is_number(char a);
@@ -27,21 +33,21 @@ int main()
 {
     struct input inputs;
 
-    while(strcmp(inputs.unfiltered,"exit\n") != 0) //while input != "exit"
+    while (strcmp(inputs.unfiltered, "exit\n") != 0) // while input != "exit"
     {
-        fgets(inputs.unfiltered, 1000, stdin);
+        fgets(inputs.unfiltered, MAX_INPUT, stdin);
 
-        if(strcmp(inputs.unfiltered,"mode\n") == 0)
+        if (strcmp(inputs.unfiltered, "integration\n") == 0 || strcmp(inputs.unfiltered, "int\n") == 0)
         {
-            printf("mode\n");
+            printf("area = %lf\n", mode_integration(&inputs));
         }
-        else if(strcmp(inputs.unfiltered,"help\n") == 0)
+        else if (strcmp(inputs.unfiltered, "help\n") == 0)
         {
             mode_help();
         }
-        else if(strcmp(inputs.unfiltered,"exit\n") != 0)
+        else if (strcmp(inputs.unfiltered, "exit\n") != 0)
         {
-            printf("ans: %lf\n", mode_claculator(&inputs) );
+            printf("ans: %lf\n", mode_claculator(&inputs));
         }
     }
 
@@ -126,11 +132,49 @@ void filter_inputs(struct input *inputs)
 double mode_claculator(struct input *inputs)
 {
     filter_inputs(inputs);
+
     int start = 0;
-
     double ans = calc(inputs->filtered, &start);
+    return ans;
+}
 
-    //printf("ans: %lf", ans);
+double mode_integration(struct input *inputs)
+{
+    double ans = 0;
+    double l_limit, u_limit;
+    printf("enter limits in ' lower,upper ' format: ");
+    scanf("%lf,%lf", &l_limit, &u_limit);
+
+    fflush(stdin);
+
+    printf("enter function: ");
+    fgets(inputs->unfiltered, MAX_INPUT, stdin);
+    filter_inputs(inputs);
+
+    char filtered_cpy[MAX_FUNCTIONS][MAX_FUNCTION_NAME];
+    int i,start;
+    char double_to_str[MAX_FUNCTION_NAME];
+
+    for (double x = l_limit; x < u_limit; x += PRECISION)
+    {
+        i = 0;
+        while (inputs->filtered[i][0] != '\0')
+        {
+            sprintf(double_to_str, "%lf", x);
+
+            if (strcmp((inputs->filtered)[i], "x") == 0)
+                strcpy(filtered_cpy[i], double_to_str);
+            else
+            {
+                strcpy(filtered_cpy[i], inputs->filtered[i]);
+            }
+            i++;
+        }
+
+        start = 0;
+        ans += calc(filtered_cpy, &start) * PRECISION;
+    }
+
     return ans;
 }
 
@@ -167,7 +211,7 @@ double calc(char inputs[MAX_FUNCTIONS][MAX_FUNCTION_NAME], int *start)
     char operation = '\0';
     double sum = 0;
 
-    char element[100], function[100];
+    char element[MAX_FUNCTION_NAME], function[MAX_FUNCTION_NAME];
     double num;
 
     while (inputs[i][0] != '\0' && inputs[i][0] != ')')
@@ -249,7 +293,7 @@ double process_function(char function[MAX_FUNCTION_NAME], double num)
     if (strcmp(function, "fact") == 0)
     {
         double fact = 1;
-        for(int i = 1; i <= num; i++)
+        for (int i = 1; i <= num; i++)
         {
             fact = fact * i;
         }
@@ -258,7 +302,17 @@ double process_function(char function[MAX_FUNCTION_NAME], double num)
 
     if (strcmp(function, "PI") == 0)
     {
-        return 3.14;
+        return PI;
+    }
+
+    if(strcmp(function, "pi") == 0)
+    {
+        return 3.1415;
+    }
+
+    if(strcmp(function, "sin") == 0)
+    {
+        return sin(num);
     }
 
     return 0;
