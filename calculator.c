@@ -155,6 +155,14 @@ double mode_integration(struct input *inputs)
     int i,start;
     char double_to_str[MAX_FUNCTION_NAME];
 
+    while (inputs->filtered[i][0] != '\0')
+    {
+        strcpy(filtered_cpy[i], inputs->filtered[i]);
+        i++;
+    }
+    filtered_cpy[i][0] = '\0';
+
+    ans = 0;
     for (double x = l_limit; x < u_limit; x += PRECISION)
     {
         i = 0;
@@ -164,10 +172,6 @@ double mode_integration(struct input *inputs)
 
             if (strcmp((inputs->filtered)[i], "x") == 0)
                 strcpy(filtered_cpy[i], double_to_str);
-            else
-            {
-                strcpy(filtered_cpy[i], inputs->filtered[i]);
-            }
             i++;
         }
 
